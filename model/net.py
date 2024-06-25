@@ -1,33 +1,25 @@
 import torch
 import torch.nn as nn
-#from   thop import profile, clever_format
-class Res_block(nn.Module):
-    def __init__(self, in_channels, out_channels, stride = 1):
-        super(Res_block, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size = 3, stride = stride, padding = 1)
-        self.bn1   = nn.BatchNorm2d(out_channels)
-        self.relu  = nn.ReLU(inplace = True)
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size = 3, padding = 1)
-        self.bn2   = nn.BatchNorm2d(out_channels)
-        if stride != 1 or out_channels != in_channels:
-            self.shortcut = nn.Sequential(
-                nn.Conv2d(in_channels, out_channels, kernel_size = 1, stride = stride),
-                nn.BatchNorm2d(out_channels))
-        else:
-            self.shortcut = None
+import torch.nn.functional as F
+
+
+# MSHNet
+class ChannelAttention(nn.Module):
+    def __init__(self, in_planes, ratio=16):
+        super(ChannelAttention, self).__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.max_pool = nn.AdaptiveMaxPool2d(1)
+        self.fc1 = nn.Conv2d(in_planes, in_planes // 16, 1, bias=False)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Conv2d(in_planes // 16, in_planes, 1, bias=False)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        residual = x
-        if self.shortcut is not None:
-            residual = self.shortcut(x)
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
-        out = self.conv2(out)
-        out = self.bn2(out)
-        out += residual
-        out = self.relu(out)
-        return out
+        avg_out = self.fc2(self.relu1(self.fc1(self.avg_pool(x))))
+        max_out = self.fc2(self.relu1(self.fc1(self.max_pool(x))))
+        out = avg_out + max_out
+        return self.sigmoid(out)
+
 
 class SpatialAttention(nn.Module):
     def __init__(self, kernel_size=7):
@@ -36,6 +28,7 @@ class SpatialAttention(nn.Module):
         padding = 3 if kernel_size == 7 else 1
         self.conv1 = nn.Conv2d(2, 1, kernel_size, padding=padding, bias=False)
         self.sigmoid = nn.Sigmoid()
+
     def forward(self, x):
         avg_out = torch.mean(x, dim=1, keepdim=True)
         max_out, _ = torch.max(x, dim=1, keepdim=True)
@@ -43,17 +36,18 @@ class SpatialAttention(nn.Module):
         x = self.conv1(x)
         return self.sigmoid(x)
 
-class Res_CBAM_block(nn.Module):
-    def __init__(self, in_channels, out_channels, stride = 1):
-        super(Res_CBAM_block, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size = 3, stride = stride, padding = 1)
-        self.bn1   = nn.BatchNorm2d(out_channels)
-        self.relu  = nn.ReLU(inplace = True)
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size = 3, padding = 1)
-        self.bn2   = nn.BatchNorm2d(out_channels)
+
+class ResNet(nn.Module):
+    def __init__(self, in_channels, out_channels, stride=1):
+        super(ResNet, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1)
+        self.bn1 = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(out_channels)
         if stride != 1 or out_channels != in_channels:
             self.shortcut = nn.Sequential(
-                nn.Conv2d(in_channels, out_channels, kernel_size = 1, stride = stride),
+                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride),
                 nn.BatchNorm2d(out_channels))
         else:
             self.shortcut = None
@@ -76,85 +70,71 @@ class Res_CBAM_block(nn.Module):
         out = self.relu(out)
         return out
 
-class ChannelAttention(nn.Module):
-    def __init__(self, in_planes, ratio=16):
-        super(ChannelAttention, self).__init__()
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.max_pool = nn.AdaptiveMaxPool2d(1)
-        self.fc1   = nn.Conv2d(in_planes, in_planes // 8, 1, bias=False)
-        self.relu1 = nn.ReLU()
-        self.fc2   = nn.Conv2d(in_planes // 8, in_planes, 1, bias=False)
-        self.sigmoid = nn.Sigmoid()
-    def forward(self, x):
-        avg_out = self.fc2(self.relu1(self.fc1(self.avg_pool(x))))
-        max_out = self.fc2(self.relu1(self.fc1(self.max_pool(x))))
-        out = avg_out + max_out
-        return self.sigmoid(out)
 
+# MSHNet
 class LightWeightNetwork(nn.Module):
-    def __init__(self, num_classes=1, input_channels=3, block='Res_block', num_blocks=[2,2,2,2], nb_filter=[8, 16, 32, 64, 128]):
-        super(LightWeightNetwork, self).__init__()
-        if block == 'Res_block':
-            block = Res_block
-
+    def __init__(self, input_channels, block=ResNet):
+        super().__init__()
+        param_channels = [16, 32, 64, 128, 256]
+        param_blocks = [2, 2, 2, 2]
         self.pool = nn.MaxPool2d(2, 2)
         self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+        self.up_4 = nn.Upsample(scale_factor=4, mode='bilinear', align_corners=True)
+        self.up_8 = nn.Upsample(scale_factor=8, mode='bilinear', align_corners=True)
+        self.up_16 = nn.Upsample(scale_factor=4, mode='bilinear', align_corners=True)
 
-        self.conv0_0 = self._make_layer(block, input_channels, nb_filter[0])
-        self.conv1_0 = self._make_layer(block, nb_filter[0],   nb_filter[1], num_blocks[0])
-        self.conv2_0 = self._make_layer(block, nb_filter[1],   nb_filter[2], num_blocks[1])
-        self.conv3_0 = self._make_layer(block, nb_filter[2],   nb_filter[3], num_blocks[2])
-        self.conv4_0 = self._make_layer(block, nb_filter[3],   nb_filter[4], num_blocks[3])
+        self.conv_init = nn.Conv2d(input_channels, param_channels[0], 1, 1)
 
-        self.conv3_1 = self._make_layer(block, nb_filter[3] + nb_filter[4], nb_filter[3])
-        self.conv2_2 = self._make_layer(block, nb_filter[2] + nb_filter[3], nb_filter[2])
-        self.conv1_3 = self._make_layer(block, nb_filter[1] + nb_filter[2], nb_filter[1])
-        self.conv0_4 = self._make_layer(block, nb_filter[0] + nb_filter[1], nb_filter[0])
+        self.encoder_0 = self._make_layer(param_channels[0], param_channels[0], block)
+        self.encoder_1 = self._make_layer(param_channels[0], param_channels[1], block, param_blocks[0])
+        self.encoder_2 = self._make_layer(param_channels[1], param_channels[2], block, param_blocks[1])
+        self.encoder_3 = self._make_layer(param_channels[2], param_channels[3], block, param_blocks[2])
 
-        self.final = nn.Conv2d(nb_filter[0], num_classes, kernel_size=1)
+        self.middle_layer = self._make_layer(param_channels[3], param_channels[4], block, param_blocks[3])
 
-    def _make_layer(self, block, input_channels, output_channels, num_blocks=1):
-        layers = []
-        layers.append(block(input_channels, output_channels))
-        for i in range(num_blocks-1):
-            layers.append(block(output_channels, output_channels))
-        return nn.Sequential(*layers)
+        self.decoder_3 = self._make_layer(param_channels[3] + param_channels[4], param_channels[3], block,
+                                          param_blocks[2])
+        self.decoder_2 = self._make_layer(param_channels[2] + param_channels[3], param_channels[2], block,
+                                          param_blocks[1])
+        self.decoder_1 = self._make_layer(param_channels[1] + param_channels[2], param_channels[1], block,
+                                          param_blocks[0])
+        self.decoder_0 = self._make_layer(param_channels[0] + param_channels[1], param_channels[0], block)
 
-    def forward(self, input):
-        x0_0 = self.conv0_0(input)
-        x1_0 = self.conv1_0(self.pool(x0_0))
-        x2_0 = self.conv2_0(self.pool(x1_0))
-        x3_0 = self.conv3_0(self.pool(x2_0))
-        x4_0 = self.conv4_0(self.pool(x3_0))
+        self.output_0 = nn.Conv2d(param_channels[0], 1, 1)
+        self.output_1 = nn.Conv2d(param_channels[1], 1, 1)
+        self.output_2 = nn.Conv2d(param_channels[2], 1, 1)
+        self.output_3 = nn.Conv2d(param_channels[3], 1, 1)
 
-        x3_1 = self.conv3_1(torch.cat([x3_0, self.up(x4_0)], 1))
-        x2_2 = self.conv2_2(torch.cat([x2_0, self.up(x3_1)], 1))
-        x1_3 = self.conv1_3(torch.cat([x1_0, self.up(x2_2)], 1))
-        x0_4 = self.conv0_4(torch.cat([x0_0, self.up(x1_3)], 1))
+        self.final = nn.Conv2d(4, 1, 3, 1, 1)
 
-        output = self.final(x0_4)
-        return output
+    def _make_layer(self, in_channels, out_channels, block, block_num=1):
+        layer = []
+        layer.append(block(in_channels, out_channels))
+        for _ in range(block_num - 1):
+            layer.append(block(out_channels, out_channels))
+        return nn.Sequential(*layer)
 
-# # #####################################
-# # ### FLops, Params, Inference time evaluation
-# if __name__ == '__main__':
-#     from model.load_param_data import  load_param
-#     import time
-#     import os
-#     from torchstat import stat
-#     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-#
-#     nb_filter, num_blocks= load_param('two', 'resnet_18')
-#     input       = torch.randn(1, 3, 256, 256,).cuda()
-#     in_channels = 3
-#     # model   = res_UNet(num_classes=1, input_channels=in_channels, block=Res_CBAM_block, num_blocks=num_blocks, nb_filter=nb_filter)
-#     model       = LightWeightNetwork(num_classes=1, input_channels=in_channels, block=Res_block, num_blocks=num_blocks, nb_filter=nb_filter)
-#     a           = stat(model, (3,256,256))
-#     # model = model.cuda()
-#     # flops, params = profile(model, inputs=(input,), verbose=True)
-#     # flops, params = clever_format([flops, params], "%.3f")
-#     # start_time = time.time()
-#     # output     = model(input)
-#     # end_time   = time.time()
-#     # print('flops:', flops, 'params:', params)
-#     # print('inference time per image:',end_time-start_time )
+    def forward(self, x, warm_flag):
+        x_e0 = self.encoder_0(self.conv_init(x))
+        x_e1 = self.encoder_1(self.pool(x_e0))
+        x_e2 = self.encoder_2(self.pool(x_e1))
+        x_e3 = self.encoder_3(self.pool(x_e2))
+
+        x_m = self.middle_layer(self.pool(x_e3))
+
+        x_d3 = self.decoder_3(torch.cat([x_e3, self.up(x_m)], 1))
+        x_d2 = self.decoder_2(torch.cat([x_e2, self.up(x_d3)], 1))
+        x_d1 = self.decoder_1(torch.cat([x_e1, self.up(x_d2)], 1))
+        x_d0 = self.decoder_0(torch.cat([x_e0, self.up(x_d1)], 1))
+
+        if warm_flag:
+            mask0 = self.output_0(x_d0)
+            mask1 = self.output_1(x_d1)
+            mask2 = self.output_2(x_d2)
+            mask3 = self.output_3(x_d3)
+            output = self.final(torch.cat([mask0, self.up(mask1), self.up_4(mask2), self.up_8(mask3)], dim=1))
+            return [mask0, mask1, mask2, mask3], output
+
+        else:
+            output = self.output_0(x_d0)
+            return [], output

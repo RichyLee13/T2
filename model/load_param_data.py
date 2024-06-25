@@ -1,10 +1,11 @@
-import numpy   as np
-from   PIL     import Image
-from   skimage import measure
+import numpy as np
+from PIL import Image
+from skimage import measure
 
-def load_dataset (root, dataset, split_method):
+
+def load_dataset(root, dataset, split_method):
     train_txt = root + '/' + dataset + '/' + split_method + '/' + 'train.txt'
-    test_txt  = root + '/' + dataset + '/' + split_method + '/' + 'test.txt'
+    test_txt = root + '/' + dataset + '/' + split_method + '/' + 'test.txt'
     train_img_ids = []
     val_img_ids = []
     with open(train_txt, "r") as f:
@@ -19,10 +20,11 @@ def load_dataset (root, dataset, split_method):
             val_img_ids.append(line.split('\n')[0])
             line = f.readline()
         f.close()
-    return train_img_ids,val_img_ids,test_txt
+    return train_img_ids, val_img_ids, test_txt
 
-def load_dataset1 (root, dataset, split_method):
-    test_txt  = root + '/' + dataset + '/' + split_method + '/' + 'test.txt'
+
+def load_dataset1(root, dataset, split_method):
+    test_txt = root + '/' + dataset + '/' + split_method + '/' + 'test.txt'
     val_img_ids = []
     with open(test_txt, "r") as f:
         line = f.readline()
@@ -30,12 +32,13 @@ def load_dataset1 (root, dataset, split_method):
             val_img_ids.append(line.split('\n')[0])
             line = f.readline()
         f.close()
-    return val_img_ids,test_txt
+    return val_img_ids, test_txt
 
-def load_dataset_eva (root, dataset, split_method):
+
+def load_dataset_eva(root, dataset, split_method):
     train_txt = root + '/' + dataset + '/' + split_method + '/' + 'train.txt'
-    test_txt  = root + '/' + dataset + '/' + split_method + '/' + 'test.txt'
-    #train_img_ids = []
+    test_txt = root + '/' + dataset + '/' + split_method + '/' + 'test.txt'
+    # train_img_ids = []
     val_img_ids = []
     # with open(train_txt, "r") as f:
     #     line = f.readline()
@@ -49,7 +52,7 @@ def load_dataset_eva (root, dataset, split_method):
             val_img_ids.append(line.split('\n')[0])
             line = f.readline()
         f.close()
-    return val_img_ids,test_txt
+    return val_img_ids, test_txt
 
 
 def load_param(channel_size, backbone, blocks_per_layer=4):
@@ -68,7 +71,7 @@ def load_param(channel_size, backbone, blocks_per_layer=4):
     elif channel_size == 'all_16':
         nb_filter = [16, 16, 16, 16, 16]
 
-    if   backbone == 'resnet_10':
+    if backbone == 'resnet_10':
         num_blocks = [1, 1, 1, 1]
     elif backbone == 'resnet_18':
         num_blocks = [2, 2, 2, 2]
@@ -76,6 +79,5 @@ def load_param(channel_size, backbone, blocks_per_layer=4):
         num_blocks = [3, 4, 6, 3]
     elif backbone == 'vgg_10':
         num_blocks = [1, 1, 1, 1]
-
 
     return nb_filter, num_blocks

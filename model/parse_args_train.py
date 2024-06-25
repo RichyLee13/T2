@@ -12,7 +12,6 @@ def parse_args():
                         help='three, four')
     parser.add_argument('--supervision', type=str, default='Full')
 
-
     # parameter for DNANet
     parser.add_argument('--channel_size', type=str, default='two',
                         help='one,  two,  three,  four')
@@ -20,10 +19,8 @@ def parse_args():
                         help='vgg10, resnet_10,  resnet_18,  resnet_34 ')
     parser.add_argument('--deep_supervision', type=str, default='False', help='True or False (model==DNANet)')
 
-
-
     # data and pre-process
-    parser.add_argument('--dataset',      type=str, default='ICPR_Track2')
+    parser.add_argument('--dataset', type=str, default='ICPR_Track2')
     parser.add_argument('--mode', type=str, default='TXT', help='mode name:  TXT, Ratio')
     parser.add_argument('--lr_mode', type=str, default='fixed_lr', help='lr_mode name:  adjusted_lr, fixed_lr')
     parser.add_argument('--test_size', type=float, default='0.5', help='when mode==Ratio')
@@ -39,7 +36,6 @@ def parse_args():
                         help='base image size')
     parser.add_argument('--crop_size', type=int, default=512,
                         help='crop image size')
-
 
     #  hyper params for training
     parser.add_argument('--epochs', type=int, default=500, metavar='N',

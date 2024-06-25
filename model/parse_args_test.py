@@ -1,5 +1,6 @@
 from model.utils import *
 
+
 def parse_args():
     """Training Options for Segmentation Experiments"""
     parser = argparse.ArgumentParser(description='Dense_Nested_Attention_Network_For_SIRST')
@@ -16,7 +17,7 @@ def parse_args():
                         help='dataset name: ICPR_Track2')
     parser.add_argument('--st_model', type=str, default='ICPR_Track2')
     parser.add_argument('--model_dir', type=str,
-                        default = './result_WS/ICPR_Track2/model_weight.pth.tar')
+                        default='./result_WS/ICPR_Track2/model_weight.pth.tar')
     parser.add_argument('--mode', type=str, default='TXT', help='mode name:  TXT, Ratio')
     parser.add_argument('--test_size', type=float, default='0.5', help='when --mode==Ratio')
     parser.add_argument('--root', type=str, default='./dataset')
@@ -32,7 +33,6 @@ def parse_args():
     parser.add_argument('--crop_size', type=int, default=512,
                         help='256, 512, 1024')
 
-
     parser.add_argument('--test_batch_size', type=int, default=1,
                         metavar='N', help='input batch size for \
                         testing (default: 32)')
@@ -44,7 +44,6 @@ def parse_args():
     # ROC threshold
     parser.add_argument('--ROC_thr', type=int, default=10,
                         help='crop image size')
-
 
     args = parser.parse_args()
 
