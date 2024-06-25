@@ -73,7 +73,7 @@ class ResNet(nn.Module):
 
 # MSHNet
 class LightWeightNetwork(nn.Module):
-    def __init__(self, input_channels, block=ResNet):
+    def __init__(self, input_channels=3, block=ResNet):
         super().__init__()
         param_channels = [16, 32, 64, 128, 256]
         param_blocks = [2, 2, 2, 2]
@@ -114,7 +114,7 @@ class LightWeightNetwork(nn.Module):
             layer.append(block(out_channels, out_channels))
         return nn.Sequential(*layer)
 
-    def forward(self, x, warm_flag):
+    def forward(self, x, warm_flag=False):
         x_e0 = self.encoder_0(self.conv_init(x))
         x_e1 = self.encoder_1(self.pool(x_e0))
         x_e2 = self.encoder_2(self.pool(x_e1))

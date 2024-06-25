@@ -14,6 +14,7 @@ from model.utils import *
 from model.metric import *
 from model.loss import *
 from model.load_param_data import load_dataset, load_param
+from p2i_i2p import img2patchs,patchs2img
 
 # model
 
@@ -99,6 +100,7 @@ class Trainer(object):
         for i, (data, labels) in enumerate(tbar):
             data = data.cuda()
             labels = labels.cuda()
+            print(data.shape)
             pred = self.model(data)
             loss = SoftIoULoss(pred, labels)
             self.optimizer.zero_grad()
@@ -121,7 +123,7 @@ class Trainer(object):
             for i, (data, labels) in enumerate(tbar):
                 data = data.cuda()
                 labels = labels.cuda()
-                pred = self.model(data)
+                pred = self.model(data,warm_flag=True)
                 loss = SoftIoULoss(pred, labels)
                 losses.update(loss.item(), pred.size(0))
                 self.ROC.update(pred, labels)
