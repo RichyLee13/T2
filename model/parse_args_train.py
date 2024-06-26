@@ -22,7 +22,7 @@ def parse_args():
     # data and pre-process
     parser.add_argument('--dataset', type=str, default='ICPR_Track2')
     parser.add_argument('--mode', type=str, default='TXT', help='mode name:  TXT, Ratio')
-    parser.add_argument('--lr_mode', type=str, default='fixed_lr', help='lr_mode name:  adjusted_lr, fixed_lr')
+    parser.add_argument('--lr_mode', type=str, default='adjusted_lr', help='lr_mode name:  adjusted_lr, fixed_lr')
     parser.add_argument('--test_size', type=float, default='0.5', help='when mode==Ratio')
     parser.add_argument('--root', type=str, default='./dataset')
     parser.add_argument('--suffix', type=str, default='.png')
