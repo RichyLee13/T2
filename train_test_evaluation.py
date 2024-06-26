@@ -33,7 +33,7 @@ class Trainer(object):
         self.save_prefix = '_'.join([args.model, args.dataset])
         self.save_dir = args.save_dir
         nb_filter, num_blocks = load_param(args.channel_size, args.backbone)
-
+        self.loss_fun = SLSIoULoss()
         # Read image index from TXT
         if args.mode == 'TXT':
             self.train_dataset_dir = args.root + '/' + args.dataset
@@ -85,7 +85,8 @@ class Trainer(object):
         self.best_iou = 0
         self.best_recall = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.best_precision = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
+        self.warm_epoch = 5
+        self.down = nn.MaxPool2d(2, 2)
     # Training
     def training(self, epoch):
         lr = self.scheduler.get_lr()[0]
@@ -97,12 +98,21 @@ class Trainer(object):
         tbar = tqdm(self.train_data)
         self.model.train()
         losses = AverageMeter()
+        tag = False
         for i, (data, labels) in enumerate(tbar):
             data = data.cuda()
             labels = labels.cuda()
-            print(data.shape)
-            pred = self.model(data)
-            loss = SoftIoULoss(pred, labels)
+            # print(data.shape)
+            if epoch> self.warm_epoch:
+                tag = True
+            masks,pred = self.model(data,tag)
+            # loss = SoftIoULoss(pred, labels)
+            loss = self.loss_fun(pred, labels, self.warm_epoch, epoch)
+            for j in range(len(masks)):
+                if j > 0:
+                    labels = self.down(labels)
+                loss = loss + self.loss_fun(masks[j], labels, self.warm_epoch, epoch)
+            loss = loss / (len(masks) + 1)
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
@@ -117,14 +127,19 @@ class Trainer(object):
         tbar = tqdm(self.test_data)
         self.model.eval()
         self.mIoU.reset()
+        self.warm_epoch = -1
+        self.loss_fun = SLSIoULoss()
         losses = AverageMeter()
-
+        tag = False
         with torch.no_grad():
-            for i, (data, labels) in enumerate(tbar):
+            for i, (data, labels,_) in enumerate(tbar):
                 data = data.cuda()
                 labels = labels.cuda()
-                pred = self.model(data,warm_flag=True)
-                loss = SoftIoULoss(pred, labels)
+                if epoch>self.warm_epoch:
+                    tag = True
+                # print(data.shape)
+                _,pred = self.model(data,tag)
+                loss = self.loss_fun(pred, labels, self.warm_epoch, epoch)
                 losses.update(loss.item(), pred.size(0))
                 self.ROC.update(pred, labels)
                 self.mIoU.update(pred, labels)

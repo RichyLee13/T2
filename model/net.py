@@ -126,7 +126,7 @@ class LightWeightNetwork(nn.Module):
         x_d2 = self.decoder_2(torch.cat([x_e2, self.up(x_d3)], 1))
         x_d1 = self.decoder_1(torch.cat([x_e1, self.up(x_d2)], 1))
         x_d0 = self.decoder_0(torch.cat([x_e0, self.up(x_d1)], 1))
-
+        # print("warm_flag",warm_flag)
         if warm_flag:
             mask0 = self.output_0(x_d0)
             mask1 = self.output_1(x_d1)
