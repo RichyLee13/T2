@@ -6,7 +6,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Dense_Nested_Attention_Network_For_SIRST')
 
     # choose model
-    parser.add_argument('--model', type=str, default='UNet')
+    parser.add_argument('--model', type=str, default='ACM')
     parser.add_argument('--attention', type=str, default='Res_block')
     parser.add_argument('--downlayer', type=str, default='two',
                         help='three, four')
@@ -42,10 +42,10 @@ def parse_args():
                         help='number of epochs to train (default: 110)')
     parser.add_argument('--start_epoch', type=int, default=0,
                         metavar='N', help='start epochs (default:0)')
-    parser.add_argument('--train_batch_size', type=int, default=4,
+    parser.add_argument('--train_batch_size', type=int, default=16,
                         metavar='N', help='input batch size for \
                         training (default: 16)')
-    parser.add_argument('--test_batch_size', type=int, default=4,
+    parser.add_argument('--test_batch_size', type=int, default=16,
                         metavar='N', help='input batch size for \
                         testing (default: 32)')
     parser.add_argument('--eval_batch_size', type=int, default=1,

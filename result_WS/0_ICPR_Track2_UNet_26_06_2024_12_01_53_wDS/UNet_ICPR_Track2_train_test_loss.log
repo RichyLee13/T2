@@ -22,3 +22,6 @@ epoch: 20.000000:	train_loss: 0.993133:	test_loss: 0.910778:
 epoch: 21.000000:	train_loss: 0.994104:	test_loss: 0.908095:	
 epoch: 22.000000:	train_loss: 0.990339:	test_loss: 0.923166:	
 epoch: 23.000000:	train_loss: 0.999852:	test_loss: 0.917999:	
+epoch: 24.000000:	train_loss: 1.000598:	test_loss: 0.910199:	
+epoch: 25.000000:	train_loss: 0.987364:	test_loss: 0.912141:	
+epoch: 26.000000:	train_loss: 0.991031:	test_loss: 0.911313:	
