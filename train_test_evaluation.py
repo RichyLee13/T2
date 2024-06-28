@@ -20,7 +20,7 @@ from p2i_i2p import img2patchs,patchs2img
 
 from model.net import LightWeightNetwork
 from model.net_acm import ASKCResUNet as ACM
-
+from model.net_LWIRSTNet import LW_IRST_ablation as LW
 
 import scipy.io as scio
 
@@ -71,6 +71,8 @@ class Trainer(object):
             model = LightWeightNetwork()
         elif args.model == 'ACM':
             model = ACM()
+        elif args.model == 'LW':
+            model = LW()
 
         model = model.cuda()
         model.apply(weights_init_xavier)

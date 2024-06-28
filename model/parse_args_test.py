@@ -5,8 +5,8 @@ def parse_args():
     """Training Options for Segmentation Experiments"""
     parser = argparse.ArgumentParser(description='Dense_Nested_Attention_Network_For_SIRST')
     # choose model
-    parser.add_argument('--model', type=str, default='UNet',
-                        help='model name:  UNet')
+    parser.add_argument('--model', type=str, default='ACM',
+                        help='model name:  UNet,ACM')
     parser.add_argument('--channel_size', type=str, default='two',
                         help='one,  two,  three,  four')
     parser.add_argument('--backbone', type=str, default='resnet_18',
