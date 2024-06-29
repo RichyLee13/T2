@@ -195,7 +195,7 @@ class Trainer(object):
             for i, (data, labels,_) in enumerate(tbar):
                 data = data.cuda()
                 labels = labels.cuda()
-                pred = self.model(data)
+                _,pred = self.model(data)
                 loss = SoftIoULoss(pred, labels)
                 save_Pred_GT_for_split_evalution(pred, labels, target_image_path, self.val_img_ids, num, args.suffix,args.crop_size)
                 num += 1
