@@ -1,4 +1,6 @@
 # Basic module
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 from tqdm import tqdm
 from model.parse_args_test import parse_args
 
@@ -12,7 +14,8 @@ from model.load_param_data import load_dataset1, load_param, load_dataset_eva
 
 # Model
 from model.net import *
-
+# from model.net_acm import ASKCResUNet as ACM
+from model.net_LWIRSTNet import LW_IRST_ablation as LW
 
 class Trainer(object):
     def __init__(self, args):
@@ -42,7 +45,14 @@ class Trainer(object):
                                     num_workers=args.workers, drop_last=False)
 
         # Choose and load model (this paper is finished by one GPU)
-        model = LightWeightNetwork()
+        # model = LightWeightNetwork()
+        if args.model == 'UNet':
+            model = LightWeightNetwork()
+        # elif args.model == 'ACM':
+        #     model = ACM()
+        elif args.model == 'LW':
+            model = LW()
+
         model.apply(weights_init_xavier)
         print("Model Initializing")
         self.model = model
@@ -66,7 +76,7 @@ class Trainer(object):
             num = 0
             for i, (data, size) in enumerate(tbar):
                 data = data.cuda()
-                pred = self.model(data)
+                _, pred = self.model(data)
                 save_resize_pred(pred, size, args.crop_size, eval_image_path, self.val_img_ids, num, args.suffix)
 
                 num += 1
@@ -77,6 +87,5 @@ def main(args):
 
 
 if __name__ == "__main__":
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     args = parse_args()
     main(args)

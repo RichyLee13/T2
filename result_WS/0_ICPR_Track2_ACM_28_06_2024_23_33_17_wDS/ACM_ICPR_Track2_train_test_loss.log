@@ -1,0 +1,10 @@
+epoch: 0.000000:	train_loss: 0.985366:	test_loss: 2.124697:	
+epoch: 1.000000:	train_loss: 1.593113:	test_loss: 1.356196:	
+epoch: 2.000000:	train_loss: 1.381779:	test_loss: 1.373721:	
+epoch: 3.000000:	train_loss: 1.360177:	test_loss: 1.349658:	
+epoch: 4.000000:	train_loss: 1.349695:	test_loss: 1.346481:	
+epoch: 5.000000:	train_loss: 1.343409:	test_loss: 1.352629:	
+epoch: 6.000000:	train_loss: 1.339570:	test_loss: 1.356834:	
+epoch: 7.000000:	train_loss: 1.337132:	test_loss: 1.349225:	
+epoch: 8.000000:	train_loss: 1.334804:	test_loss: 1.336508:	
+epoch: 9.000000:	train_loss: 1.338701:	test_loss: 1.351083:	

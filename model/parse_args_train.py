@@ -6,7 +6,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Dense_Nested_Attention_Network_For_SIRST')
 
     # choose model
-    parser.add_argument('--model', type=str, default='ACM')
+    parser.add_argument('--model', type=str, default='UNet')
     parser.add_argument('--attention', type=str, default='Res_block')
     parser.add_argument('--downlayer', type=str, default='two',
                         help='three, four')

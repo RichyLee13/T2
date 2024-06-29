@@ -1,7 +1,7 @@
 # torch and visulization
 import os
 import time
-
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 from tqdm import tqdm
 import torch.optim as optim
 from torch.optim import lr_scheduler
@@ -19,7 +19,7 @@ from p2i_i2p import img2patchs,patchs2img
 # model
 
 from model.net import LightWeightNetwork
-from model.net_acm import ASKCResUNet as ACM
+# from model.net_acm import ASKCResUNet as ACM
 from model.net_LWIRSTNet import LW_IRST_ablation as LW
 
 import scipy.io as scio
@@ -99,7 +99,7 @@ class Trainer(object):
         save_lr_dir = 'result_WS/' + self.save_dir + '/' + self.save_prefix + '_learning_rate.log'
         with open(save_lr_dir, 'a') as f:
             f.write(' learning_rate: {:04f}:\n'.format(lr))
-        print('learning_rate:', lr)
+        print('learning_rate:',lr)
 
         tbar = tqdm(self.train_data)
         self.model.train()
@@ -166,9 +166,9 @@ class Trainer(object):
         if mean_IOU > self.best_iou:
             self.best_iou = mean_IOU
             save_model(self.best_iou, self.save_dir, self.save_prefix,
-                       self.train_loss, self.test_loss, recall, precision, epoch, self.model.state_dict())
+                   self.train_loss, self.test_loss, recall, precision, epoch, self.model.state_dict())
 
-    def evaluation(self, epoch):
+    def evaluation(self,epoch):
         candidate_model_dir = os.listdir('result_WS/' + self.save_dir)
         for model_num in range(len(candidate_model_dir)):
             model_dir = 'result_WS/' + self.save_dir + '/' + candidate_model_dir[model_num]
@@ -180,8 +180,8 @@ class Trainer(object):
         self.model = self.model.to('cuda')
 
         evaluation_save_path = './result_WS/' + self.save_dir
-        target_image_path = evaluation_save_path + '/' + 'visulization_result'
-        target_dir = evaluation_save_path + '/' + 'visulization_fuse'
+        target_image_path = evaluation_save_path + '/' +'visulization_result'
+        target_dir = evaluation_save_path + '/' +'visulization_fuse'
 
         make_visulization_dir(target_image_path, target_dir)
 
@@ -192,13 +192,12 @@ class Trainer(object):
         losses = AverageMeter()
         with torch.no_grad():
             num = 0
-            for i, (data, labels) in enumerate(tbar):
+            for i, (data, labels,_) in enumerate(tbar):
                 data = data.cuda()
                 labels = labels.cuda()
                 pred = self.model(data)
                 loss = SoftIoULoss(pred, labels)
-                save_Pred_GT_for_split_evalution(pred, labels, target_image_path, self.val_img_ids, num, args.suffix,
-                                                 args.crop_size)
+                save_Pred_GT_for_split_evalution(pred, labels, target_image_path, self.val_img_ids, num, args.suffix,args.crop_size)
                 num += 1
 
                 losses.update(loss.item(), pred.size(0))
@@ -223,11 +222,11 @@ def main(args):
     for epoch in range(args.start_epoch, args.epochs):
         trainer.training(epoch)
         trainer.testing(epoch)
-        if (epoch + 1) == args.epochs:
-            trainer.evaluation(epoch)
+        if (epoch+1) ==args.epochs:
+           trainer.evaluation(epoch)
 
 
 if __name__ == "__main__":
     args = parse_args()
-    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
+    # os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
     main(args)

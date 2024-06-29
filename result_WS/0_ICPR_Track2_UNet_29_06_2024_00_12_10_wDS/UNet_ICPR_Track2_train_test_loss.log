@@ -1,0 +1,5 @@
+epoch: 0.000000:	train_loss: 0.950475:	test_loss: 1.712088:	
+epoch: 1.000000:	train_loss: 1.360058:	test_loss: 1.164656:	
+epoch: 2.000000:	train_loss: 1.274527:	test_loss: 1.025471:	
+epoch: 3.000000:	train_loss: 1.246235:	test_loss: 1.008277:	
+epoch: 4.000000:	train_loss: 1.138910:	test_loss: 1.074853:	

@@ -1,7 +1,7 @@
 # torch and visulization
 import os
 import time
-
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 from tqdm import tqdm
 import torch.optim as optim
 from torch.optim import lr_scheduler
@@ -18,6 +18,8 @@ from model.load_param_data import load_dataset, load_param
 # model
 
 from model.net import LightWeightNetwork
+from model.net_acm import ASKCResUNet as ACM
+from model.net_LWIRSTNet import LW_IRST_ablation as LW
 
 import scipy.io as scio
 
@@ -66,6 +68,10 @@ class Trainer(object):
 
         if args.model == 'UNet':
             model = LightWeightNetwork()
+        elif args.model == 'ACM':
+            model = ACM()
+        elif args.model == 'LW':
+            model = LW()
 
         model = model.cuda()
         model.apply(weights_init_xavier)
@@ -118,7 +124,7 @@ class Trainer(object):
         losses = AverageMeter()
 
         with torch.no_grad():
-            for i, (data, labels) in enumerate(tbar):
+            for i, (data, labels,_) in enumerate(tbar):
                 data = data.cuda()
                 labels = labels.cuda()
                 pred = self.model(data)
@@ -169,7 +175,7 @@ class Trainer(object):
         losses = AverageMeter()
         with torch.no_grad():
             num = 0
-            for i, (data, labels) in enumerate(tbar):
+            for i, (data, labels,_) in enumerate(tbar):
                 data = data.cuda()
                 labels = labels.cuda()
                 pred = self.model(data)
@@ -206,5 +212,5 @@ def main(args):
 
 if __name__ == "__main__":
     args = parse_args()
-    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
+    # os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
     main(args)
