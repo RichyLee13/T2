@@ -71,6 +71,8 @@ class Trainer(object):
             model = LightWeightNetwork()
         elif args.model == 'ACM':
             model = ACM()
+        elif args.model == 'LW':
+            model = LW()
 
         model = model.cuda()
         model.apply(weights_init_xavier)
