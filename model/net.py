@@ -3,9 +3,51 @@ import torch.nn as nn
 import  numpy as np
 from torch.nn import BatchNorm2d
 from  torchvision.models.resnet import BasicBlock
-from model.fusion_acm import AsymBiChaFuse
+# from model.fusion_acm import AsymBiChaFuse
 import torch.nn.functional as F
 # from model.utils import init_weights, count_param
+
+
+class AsymBiChaFuse(nn.Module):
+    def __init__(self, channels=64, r=4):
+        super(AsymBiChaFuse, self).__init__()
+        self.channels = channels
+        self.bottleneck_channels = int(channels // r)
+
+
+        self.topdown = nn.Sequential(
+        nn.AdaptiveAvgPool2d(1),
+        nn.Conv2d(in_channels=self.channels, out_channels=self.bottleneck_channels, kernel_size=1, stride=1,padding=0),
+        nn.BatchNorm2d(self.bottleneck_channels,momentum=0.9),
+        nn.ReLU(inplace=True),
+        nn.Conv2d(in_channels=self.bottleneck_channels,out_channels=self.channels,  kernel_size=1, stride=1,padding=0),
+        nn.BatchNorm2d(self.channels,momentum=0.9),
+        nn.Sigmoid()
+        )
+
+        self.bottomup = nn.Sequential(
+        nn.Conv2d(in_channels=self.channels,out_channels=self.bottleneck_channels, kernel_size=1, stride=1,padding=0),
+        nn.BatchNorm2d(self.bottleneck_channels,momentum=0.9),
+        nn.ReLU(inplace=True),
+        nn.Conv2d(in_channels=self.bottleneck_channels,out_channels=self.channels, kernel_size=1, stride=1,padding=0),
+        nn.BatchNorm2d(self.channels,momentum=0.9),
+        nn.Sigmoid()
+        )
+
+        self.post = nn.Sequential(
+        nn.Conv2d(in_channels=channels,out_channels=channels, kernel_size=3, stride=1, padding=1, dilation=1),
+        nn.BatchNorm2d(channels,momentum=0.9),
+        nn.ReLU(inplace=True)
+        )
+
+    def forward(self, xh, xl):
+
+        topdown_wei = self.topdown(xh)
+        bottomup_wei = self.bottomup(xl)
+        xs = 2 * torch.mul(xl, topdown_wei) + 2 * torch.mul(xh, bottomup_wei)
+        xs = self.post(xs)
+        return xs
+
 
 class LightWeightNetwork(nn.Module):
     def __init__(self, in_channels=3, layers=[3, 3, 3], channels=[8, 16, 32, 64], fuse_mode='AsymBi', classes=1,
