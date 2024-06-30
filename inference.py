@@ -15,7 +15,7 @@ from model.load_param_data import load_dataset1, load_param, load_dataset_eva
 # Model
 from model.net import *
 # from model.net_acm import ASKCResUNet as ACM
-from model.net_LWIRSTNet import LW_IRST_ablation as LW
+# from model.net_LWIRSTNet import LW_IRST_ablation as LW
 
 class Trainer(object):
     def __init__(self, args):
@@ -50,8 +50,8 @@ class Trainer(object):
             model = LightWeightNetwork()
         # elif args.model == 'ACM':
         #     model = ACM()
-        elif args.model == 'LW':
-            model = LW()
+        # elif args.model == 'LW':
+        #     model = LW()
 
         model.apply(weights_init_xavier)
         print("Model Initializing")
