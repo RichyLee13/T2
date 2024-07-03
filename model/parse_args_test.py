@@ -28,9 +28,9 @@ def parse_args():
                         metavar='N', help='dataloader threads')
     parser.add_argument('--in_channels', type=int, default=3,
                         help='in_channel=3 for pre-process')
-    parser.add_argument('--base_size', type=int, default=512,
+    parser.add_argument('--base_size', type=int, default=1024,
                         help='256, 512, 1024')
-    parser.add_argument('--crop_size', type=int, default=512,
+    parser.add_argument('--crop_size', type=int, default=1024,
                         help='256, 512, 1024')
 
     parser.add_argument('--test_batch_size', type=int, default=1,

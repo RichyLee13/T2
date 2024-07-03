@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch
 # from torchvision import models
 # from torchviz import make_dot,make_dot_from_trace
-# import torch.nn.functional as F
+import torch.nn.functional as F
 
 
 class dw_conv(nn.Module):
@@ -311,6 +311,11 @@ class DownsamplingBottleneck(nn.Module):
 
         return self.out_activation(out)
 
+
+def resize_tensor(input_tensor, target_size):
+    return F.interpolate(input_tensor, size=target_size, mode='bilinear', align_corners=True)
+
+
 # Lightweight Infrared small segmentation
 class LightWeightNetwork(nn.Module):
     def __init__(self, n_classes=1, encoder_relu=False, decoder_relu=True, channel=(8, 32, 64), dilations=(2,4,8,16), kernel_size=(3,5,7,9), padding=(1,2,3,4)):
@@ -453,6 +458,11 @@ class LightWeightNetwork(nn.Module):
 
 
     def forward(self, x):
+        flag = 0
+        if x.size() == torch.Size([1, 3, 512, 512]):
+            flag = 1
+            x = resize_tensor(x, (256, 256))
+
         # Stage 1-Encoder
         input_size = x.size()         # 1 3 256 256
         x1 = self.initial_block(x)    # 1 8 128 128
@@ -520,7 +530,8 @@ class LightWeightNetwork(nn.Module):
         x6 = self.transposed6_conv(x5, output_size=input_size)         # 1 1  256 256
         # x6 = self.conv3(x5)  # 1 16 128 128  1*1conv.
         # x6 = F.interpolate(x6, size=(256, 256), mode='bilinear', align_corners=True)
+        if flag == 1:
+            x6 = resize_tensor(x6, (512, 512))
 
-        print(x6.max(),x6.min())
         return x6
 
