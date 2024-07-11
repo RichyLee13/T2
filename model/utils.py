@@ -602,7 +602,7 @@ def save_Pred_GT_for_split_evalution(pred, labels, target_image_path, val_img_id
 
 
 def save_resize_pred(pred, size, crop_size, target_image_path, val_img_ids, num, suffix):
-    preds = np.array((pred > 0).cpu()).astype('int64') * 255
+    preds = np.array((pred > -40 ).cpu()).astype('int64') * 255
     preds = np.uint8(preds)
 
     preds = Image.fromarray(preds.reshape(crop_size, crop_size))
